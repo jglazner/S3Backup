@@ -48,7 +48,7 @@ setup(
 
     package_data={'backup': ['*']},
 
-    install_requires=["pycrypto", "Crypto", "boto", "argparse", "appdirs"],
+    install_requires=["pycrypto", "Crypto", "boto", "argparse", "appdirs", "filechunkio"],
 
     entry_points={
         'console_scripts': [

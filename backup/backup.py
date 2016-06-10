@@ -6,6 +6,8 @@ import tarfile
 import logging
 import shutil
 import getpass
+import math
+from filechunkio import FileChunkIO
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
 
@@ -54,7 +56,7 @@ class S3Backup(S3Base):
         self.bucket = self.get_or_create_bucket("{0}".format(self.name))
 
     def percent_cb(self, so_far, total):
-        self.logger.info("complete={0}, total={0}".format(so_far, total))
+        print("complete={0}, total={0}".format(so_far, total))
 
     @staticmethod
     def get_file_paths(source_dir):
@@ -83,26 +85,27 @@ class S3Backup(S3Base):
         return self.bucket.get_key(name)
 
     def multipart_upload(self, filesize, filename):
-        self.logger.info("Using multi-part upload for %s" % filename)
+        print("Using multi-part upload for {0}...".format(filename))
         mp = self.bucket.initiate_multipart_upload(filename)
-        fp = open(filename, 'rb')
-        fp_num = 0
-        while fp.tell() < filesize:
-            fp_num += 1
-            self.logger.info("Uploading part %i of %s" % (fp_num, filename))
-            mp.upload_part_from_file(fp, fp_num, cb=self.percent_cb, num_cb=10, size=self.part_size)
+        chunk_count = int(math.ceil(filesize / float(self.part_size)))
 
+        for i in range(chunk_count):
+            offset = self.part_size * i
+            bytes = min(self.part_size, filesize - offset)
+            with FileChunkIO(filename, 'r', offset=offset, bytes=bytes) as fp:
+                mp.upload_part_from_file(fp, part_num=i + 1)
+            print("Upload complete.")
             mp.complete_upload()
 
     def upload(self, filename):
-        self.logger.debug("Using single upload for %s" % filename)
+        print("Using single upload for {0}".format(filename))
         k = boto.s3.key.Key(self.bucket)
         k.key = filename
         k.set_contents_from_filename(filename, cb=self.percent_cb, num_cb=10)
 
     def backup_file(self, filename):
-        self.logger.info('Uploading %s to Amazon S3 bucket %s' % (filename, self.bucket.name))
-        filesize = os.path.getsize(filename)
+        print('Uploading %s to Amazon S3 bucket %s' % (filename, self.bucket.name))
+        filesize = os.stat(filename).st_size
         if filesize > self.max_size:
             self.multipart_upload(filesize, filename)
         else:
@@ -120,7 +123,7 @@ class S3Backup(S3Base):
         elif os.path.isdir(path):
             self.backup_folder(path)
         else:
-            self.logger.error("{0} was ignored because it's not a file or directory!".format(path))
+            print("{0} was ignored because it's not a file or directory!".format(path))
 
 
 class S3Restore(S3Base):
