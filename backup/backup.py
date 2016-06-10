@@ -114,14 +114,13 @@ class S3Backup(S3Base):
         for filename in paths:
             self.backup_file(filename)
 
-    def backup(self, files_and_folders):
-        for path in files_and_folders:
-            if os.path.isfile(path):
-                self.backup_file(path)
-            elif os.path.isdir(path):
-                self.backup_folder(path)
-            else:
-                self.logger.error("{0} was ignored because it's not a file or directory!".format(path))
+    def backup(self, path):
+        if os.path.isfile(path):
+            self.backup_file(path)
+        elif os.path.isdir(path):
+            self.backup_folder(path)
+        else:
+            self.logger.error("{0} was ignored because it's not a file or directory!".format(path))
 
 
 class S3Restore(S3Base):

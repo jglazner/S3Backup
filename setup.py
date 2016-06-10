@@ -8,7 +8,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.0.0"
 APP_AUTHOR = "Jed Glazner"
 APP_AUTHOR_EMAIL= "jglazner@coldcrow.com"
 APP_NAME = "backup"
@@ -52,8 +52,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            's3backup=backup:s3backup',
-            'dbbackup=backup:dbbackup'
+            'backup=backup:main'
         ],
     },
 )
