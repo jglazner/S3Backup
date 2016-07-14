@@ -11,7 +11,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 APP_VERSION = "1.0.3"
 APP_AUTHOR = "Jed Glazner"
 APP_AUTHOR_EMAIL= "jglazner@coldcrow.com"
-APP_NAME = "backup"
+APP_NAME = "s3tools"
 
 setup(
     name=APP_NAME,
@@ -44,9 +44,9 @@ setup(
 
     keywords='AWS Backup Tools',
 
-    packages=['backup'],
+    packages=['s3tools'],
 
-    package_data={'backup': ['*']},
+    package_data={'s3tools': ['*']},
 
     install_requires=["boto", "argparse", "appdirs", "filechunkio"],
 

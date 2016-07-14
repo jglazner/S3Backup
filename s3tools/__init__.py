@@ -3,58 +3,8 @@ __author__ = 'jglazner'
 import argparse
 import logging
 
-import boto
-from boto.exception import S3ResponseError
-from abc import ABCMeta, abstractmethod
-
 from s3tools.backup import MySQLDatabaseBackup, S3Backup
 from s3tools.restore import MySQLDatabaseRestore, S3Restore
-
-
-class S3ToolsCommand(object):
-
-    __metaclass__ = ABCMeta
-
-    def __init__(self, args):
-        self.args = args
-        self.log_file='s3.log'
-
-
-    @abstractmethod
-    def execute(self):
-        pass
-
-class S3Base(S3ToolsCommand):
-    def __init__(self, args):
-        super(S3Base).__init__(args)
-        self.conn = boto.connect_s3()
-        self.logger = configure_logging(self.__class__.__name__, self.log_file)
-
-    def get_or_create_bucket(self, bucket_name):
-        bucket = None
-        try:
-            bucket = self.conn.get_bucket(bucket_name)
-        except S3ResponseError:
-            bucket = self.conn.create_bucket(bucket_name)
-            bucket.set_canned_acl('private')
-
-        return bucket
-
-    @abstractmethod
-    def execute(self):
-        pass
-
-
-def configure_logging(name, log_file):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(log_file)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-
-    return logger
 
 
 def parse_s3_args(subparser, command):
@@ -110,7 +60,7 @@ def parse_args():
     parse_db_args(backup_parser, db_backup)
     parse_s3_args(backup_parser, s3_backup)
 
-    restore = subparsers.add_parser('backup', help='Restore Commands')
+    restore = subparsers.add_parser('restore', help='Restore Commands')
     restore_parser = restore.add_subparsers(help="Restore Commands")
     parse_db_args(restore_parser, db_restore)
     parse_s3_args(restore_parser, s3_restore)

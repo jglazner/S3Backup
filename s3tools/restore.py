@@ -1,6 +1,6 @@
 __author__ = 'jglazner'
 
-from s3tools import S3Base
+from common import S3Base
 
 
 class S3Restore(S3Base):

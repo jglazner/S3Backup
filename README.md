@@ -1,2 +1,2 @@
-# S3Backup
-Backup misc files and folders to S3
+# S3Tools
+Tool that allows you to backup and restore various files / apps from S3

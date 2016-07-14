@@ -9,7 +9,7 @@ import math
 from filechunkio import FileChunkIO
 from boto.s3.key import Key
 
-from s3tools import S3Base
+from common import S3Base
 
 
 class S3Backup(S3Base):
