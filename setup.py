@@ -8,7 +8,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.3"
 APP_AUTHOR = "Jed Glazner"
 APP_AUTHOR_EMAIL= "jglazner@coldcrow.com"
 APP_NAME = "backup"
@@ -48,11 +48,11 @@ setup(
 
     package_data={'backup': ['*']},
 
-    install_requires=["pycrypto", "Crypto", "boto", "argparse", "appdirs", "filechunkio"],
+    install_requires=["boto", "argparse", "appdirs", "filechunkio"],
 
     entry_points={
         'console_scripts': [
-            'backup=backup:main'
+            's3tools=s3tools:main'
         ],
     },
 )

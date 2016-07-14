@@ -3,60 +3,28 @@ import boto
 import os
 import time
 import tarfile
-import logging
 import shutil
 import getpass
 import math
 from filechunkio import FileChunkIO
 from boto.s3.key import Key
-from boto.exception import S3ResponseError
 
-
-def configure_logging(name, log_file):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(log_file)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-
-    return logger
-
-
-class S3Base(object):
-    def __init__(self, log_file='s3.log'):
-        self.conn = boto.connect_s3()
-        self.logger = configure_logging('S3Backup', log_file)
-        self.bucket = None
-
-    def get_or_create_bucket(self, bucket_name):
-        bucket = None
-        try:
-            bucket = self.conn.get_bucket(bucket_name)
-        except S3ResponseError:
-            bucket = self.conn.create_bucket(bucket_name)
-            bucket.set_canned_acl('private')
-
-        return bucket
+from s3tools import S3Base
 
 
 class S3Backup(S3Base):
-    def __init__(self, name):
+    def __init__(self, args):
         """
         Creates the S3Backup object.
         :param base_name: The prefix to use for the bucket.
         :return:
         """
-        super(S3Backup, self).__init__(log_file='s3backup.log')
-        assert name is not None
-        self.name = name
+        super(S3Backup, self).__init__(args)
+        assert args.name is not None
+        self.name = args.name
         self.max_size = 20 * 1000 * 1000
         self.part_size = 6 * 1000 * 1000
         self.bucket = self.get_or_create_bucket("{0}".format(self.name))
-
-    def percent_cb(self, so_far, total):
-        print("complete={0}, total={0}".format(so_far, total))
 
     @staticmethod
     def get_file_paths(source_dir):
@@ -94,14 +62,14 @@ class S3Backup(S3Base):
             bytes = min(self.part_size, filesize - offset)
             with FileChunkIO(filename, 'r', offset=offset, bytes=bytes) as fp:
                 mp.upload_part_from_file(fp, part_num=i + 1)
-            print("Upload complete.")
-            mp.complete_upload()
+
+        print("Upload complete.")
+        mp.complete_upload()
 
     def upload(self, filename):
-        print("Using single upload for {0}".format(filename))
         k = boto.s3.key.Key(self.bucket)
         k.key = filename
-        k.set_contents_from_filename(filename, cb=self.percent_cb, num_cb=10)
+        k.set_contents_from_filename(filename)
 
     def backup_file(self, filename):
         print('Uploading %s to Amazon S3 bucket %s' % (filename, self.bucket.name))
@@ -114,8 +82,11 @@ class S3Backup(S3Base):
     def backup_folder(self, source_dir):
         self.make_folder(source_dir)
         paths = self.get_file_paths(source_dir)
+        counter = 0
         for filename in paths:
             self.backup_file(filename)
+            counter += 1
+        self.logger.info("Backed up {0} files under {1}".format(counter, source_dir))
 
     def backup(self, path):
         if os.path.isfile(path):
@@ -127,9 +98,10 @@ class S3Backup(S3Base):
 
 
 class S3Restore(S3Base):
-    def __init__(self, bucket_name):
-        super(S3Restore, self).__init__("s3restore.log")
-        self.bucket = self.conn.get_bucket(bucket_name)
+    def __init__(self, args):
+        super(S3Restore, self).__init__(args)
+        self.name = args.name
+        self.bucket = self.get_or_create_bucket("{0}".format(self.name))
 
     def restore_all(self):
         keys = self.bucket.get_all_keys()
@@ -144,10 +116,9 @@ class S3Restore(S3Base):
         print keys
 
 
-class MySQLDatabaseBackup(object):
+class MySQLDatabaseBackup(S3Base):
     def __init__(self, args):
-        self.logger = configure_logging('DBBackup', 'db_backup.log')
-        self.args = args
+        super(MySQLDatabaseBackup, self).__init__(args)
 
     def make_tarfile(self, output_dir, source_file):
             output = "{0}/{1}.tar.gz".format(output_dir, self.args.name)
@@ -186,7 +157,7 @@ class MySQLDatabaseBackup(object):
         tarball = self.make_tarfile(backup_path, dumpfile)
         self.logger.info("Your dump has been created at {0}".format(tarball))
         self.upload(backup_path, tarball)
-
-        if self.args.clean:
+        self.logger.info("Successfully uploaded to S3")
+        if self.args.cleanup:
             shutil.rmtree(backup_path)
 
