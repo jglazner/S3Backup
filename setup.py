@@ -48,7 +48,7 @@ setup(
 
     package_data={'s3tools': ['*']},
 
-    install_requires=["boto", "argparse", "appdirs", "filechunkio"],
+    install_requires=["sortedcontainers", "boto", "argparse", "appdirs", "filechunkio"],
 
     entry_points={
         'console_scripts': [

@@ -3,20 +3,14 @@ __author__ = 'jglazner'
 import argparse
 import logging
 
-from s3tools.backup import MySQLDatabaseBackup, S3Backup
-from s3tools.restore import MySQLDatabaseRestore, S3Restore
+from s3tools.backup import MySQLDatabaseBackup, S3BackupFileOrFolder
+from s3tools.restore import MySQLDatabaseRestore, S3RestoreFileOrFolder
 
 
 def parse_s3_args(subparser, command):
     s3 = subparser.add_parser('s3', help='S3 Backup/Restore Commands')
     s3.set_defaults(command=command)
-    s3.add_argument('FILE_OR_DIRECTORY', help="The file or folder to backup/restore to/from the specified s3 bucket")
-    s3.add_argument(
-        '-b',
-        '--bucket',
-        required=True,
-        help='Bucket name'
-    )
+    s3.add_argument('file_or_folder', help="The file or folder to backup/restore to/from the specified s3 bucket")
 
 
 def parse_db_args(subparser, command):
@@ -24,7 +18,7 @@ def parse_db_args(subparser, command):
     db.set_defaults(command=command)
     db.add_argument(
         '-n',
-        '--name',
+        '--db-name',
         required=True,
         help="Name of the MySQL Database"
     )
@@ -40,19 +34,30 @@ def parse_db_args(subparser, command):
         help="MySQL Password"
     )
     db.add_argument(
+        '--cleanup',
+        default=None,
+        help="Remove local backup files after successfully uploading to S3"
+    )
+    db.add_argument(
+        '-v',
+        '--version',
+        default=None,
+        help="The version of the DB you are backing up"
+    )
+
+def parse_args(args=None):
+    root_parser = argparse.ArgumentParser(prog="s3tools")
+    root_parser.add_argument(
+        '--profile',
+        default="default",
+        help="Which aws profile to use from ~/.aws/credentials. Default=default"
+    )
+    root_parser.add_argument(
         '-b',
         '--bucket',
         required=True,
-        help="Name of the S3Bucket to back up to"
+        help='Bucket name'
     )
-    db.add_argument(
-        '-c',
-        '--cleanup',
-        help="Remove local backup files after successfully uploading to S3"
-    )
-
-def parse_args():
-    root_parser = argparse.ArgumentParser(prog="s3tools")
     subparsers = root_parser.add_subparsers(help='S3Tools help:')
 
     backup = subparsers.add_parser('backup', help='Backup Commands')
@@ -65,7 +70,7 @@ def parse_args():
     parse_db_args(restore_parser, db_restore)
     parse_s3_args(restore_parser, s3_restore)
 
-    return root_parser.parse_args()
+    return root_parser.parse_args(args=args)
 
 
 def main():
@@ -75,19 +80,19 @@ def main():
 
 def db_restore(args):
     restore = MySQLDatabaseRestore(args)
-    restore.restore()
+    restore.execute()
 
 
 def db_backup(args):
     backup = MySQLDatabaseBackup(args)
-    backup.backup()
+    backup.execute()
 
 
 def s3_restore(args):
-    restore = S3Restore(args)
-    restore.restore()
+    restore = S3RestoreFileOrFolder(args)
+    restore.execute()
 
 
 def s3_backup(args):
-    backup = S3Backup(args)
-    backup.restore()
+    backup = S3BackupFileOrFolder(args)
+    backup.execute()

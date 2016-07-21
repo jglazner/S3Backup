@@ -1,0 +1,6 @@
+sortedcontainers
+boto
+argparse
+appdirs
+filechunkio
+pytest
