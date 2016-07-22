@@ -59,12 +59,16 @@ class S3Base(S3ToolsCommand):
         return bucket
 
     def download(self, remote, local):
-        folder = "{0}/{1}".format(local, "/".join(remote.name.split('/')[:-1]))
+        folder = os.path.dirname(local)
         if not os.path.isdir(folder):
             os.makedirs(folder)
+        if not local.endswith("/"):
+            f = open(local, "w")
+            remote.get_contents_to_file(f)
+            f.close()
+            return f.name
 
-        downloaded = remote.get_contents_to_filename("{0}/{1}".format(local, remote.name.split('/')[-1:]))
-        return downloaded
+        return None
 
     def make_folder(self, bucket, name):
         if not name.endswith("/"):
@@ -133,19 +137,29 @@ class MySQLBase(S3Base):
 
         return password
 
-    def backup(self):
-        gzip = "{1}/{0}/{1}.sql.gz".format(self.version, self.db_name)
-        cmd = "mysqldump -u {0} -p'{1}' {2} | gzip -9 > {3}".format(self.username, self.password, self.db_name, gzip)
-        os.system(cmd)
+    @property
+    def gzipfile(self):
+        return "{1}/{0}/{1}.sql.gz".format(self.version, self.db_name)
 
-        return gzip
+    @property
+    def sqlfile(self, version=None):
+        return "{1}/{0}/{1}.sql".format(self.version, self.db_name)
+
+    def backup(self):
+        run_command("mysqldump -u {0} -p'{1}' {2} | gzip -9 > {3}".format(self.username, self.password, self.db_name, self.gzipfile))
+
+        return self.gzipfile
 
     def restore(self):
-        cmd = "gunzip {1}.sql.gz".format(self.db_name)
-        os.system(cmd)
+        if os.path.exists(self.sqlfile):
+            os.unlink(self.sqlfile)
+        run_command("gunzip {0}".format(self.gzipfile))
 
-        extracted = "{1}/{0}/{1}.sql".format(self.version, self.db_name)
-        cmd = "mysql -u {0} -p'{1}' {2} <  {3}.sql".format(self.username, self.password, self.db_name, extracted)
-        os.system(cmd)
+        run_command("mysql -u {0} -p'{1}' {2} <  {3}".format(self.username, self.password, self.db_name, self.sqlfile))
 
-        return extracted
+        return self.sqlfile
+
+
+def run_command(cmd):
+    if not os.system(cmd) == 0:
+        raise RuntimeError("Failed to execute {0}".format(cmd))

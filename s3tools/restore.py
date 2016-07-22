@@ -46,9 +46,16 @@ class MySQLDatabaseRestore(MySQLBase):
         return sorted[len(sorted)-1]
 
     def execute(self):
-        db_backup = self.bucket.get_key("{1}/{0}".format(self.version, self.db_name))
-        tarfile = self.download(db_backup)
-        self.restore()
+        self.logger.info("Downloading backup of DB: {0} ...".format(self.db_name))
+        db_backup = self.bucket.get_key(self.gzipfile)
+        if db_backup:
+            self.download(db_backup, "{0}/{1}".format(os.getcwd(), self.gzipfile))
+            self.logger.info("Download complete.".format(self.db_name))
 
+            self.logger.info("Restoring...")
+            self.restore()
+            self.logger.info("Restored!")
+        else:
+            raise IOError("Backup file: {0} could not be found in S3 bucket: {1}!".format(self.gzipfile, self.bucket.name))
 
 

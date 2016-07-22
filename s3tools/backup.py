@@ -1,11 +1,6 @@
 __author__ = 'jglazner'
 import os
-import time
-import tarfile
 import shutil
-
-from boto.s3.key import Key
-
 from common import S3Base, MySQLBase
 
 
