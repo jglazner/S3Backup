@@ -73,8 +73,8 @@ def parse_db_args(subparser, command):
     db.add_argument(
         '-v',
         '--version',
-        default=time.strftime('%m%d%Y'),
-        help="The version of the DB you are backing up"
+        help="The version of the DB you are backing up (%m%d%Y). During a restore, "
+             "if this is not specified, it will attempt to find the most recent backup."
     )
 
 def parse_args(args=None):
