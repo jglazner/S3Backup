@@ -30,5 +30,4 @@ def test_restore_db_version():
     obj = MySQLDatabaseRestore(parsed_args)
     obj.execute()
     assert not obj.bucket.get_key('mtbseminars/{0}/mtbseminars.sql.gz'.format(parsed_args.version)) is None
-
-test_restore_db_version()
+    
