@@ -84,4 +84,4 @@ def test_backup_db():
     parsed_args = parse_args(args=args)
     obj = MySQLDatabaseBackup(parsed_args)
     zipfile = obj.execute()
-    assert not obj.bucket.get_key('mtbseminars/{0}/mtbseminars.sql.gz'.format(parsed_args.version)) is None
+    assert not obj.bucket.get_key('mtbseminars/{0}/mtbseminars.sql.gz'.format(obj.version)) is None

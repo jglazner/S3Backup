@@ -24,4 +24,4 @@ def test_mysql_args():
     assert parsed_args.username == "uname"
     assert parsed_args.password == "password"
     assert parsed_args.cleanup is False
-    assert parsed_args.version == time.strftime('%m%d%Y')
+    assert parsed_args.version is None
