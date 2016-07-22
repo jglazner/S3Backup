@@ -1,5 +1,6 @@
 __author__ = 'jglazner'
 import os
+import time
 import shutil
 from common import S3Base, MySQLBase
 
@@ -83,6 +84,9 @@ class MySQLDatabaseBackup(MySQLBase):
         self.bucket = self.get_or_create_bucket(self.args.bucket)
         if not self.bucket:
             raise RuntimeError("S3 Bucket {0} does not exit, and unable to create it!".format(self.args.bucket))
+
+        if not self.version:
+            self.version = time.strftime('%m%d%Y')
 
         path = "{0}/{1}".format(self.db_name, self.version)
         if not os.path.exists(path):
