@@ -58,15 +58,13 @@ class S3Base(S3ToolsCommand):
 
         return bucket
 
-    def download(self, bucket, filename):
-        folder = self.get_file_folder(filename)
-        if not os.path.isdir("/" + folder):
-            os.makedirs("/" + folder)
-        if not filename.endswith("/"):
-            s3_key = bucket.get_key(filename)
-            downloaded = s3_key.get_contents_to_filename("/{0}".format(filename))
-            return downloaded
-        return None
+    def download(self, remote, local):
+        folder = "{0}/{1}".format(local, "/".join(remote.name.split('/')[:-1]))
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+
+        downloaded = remote.get_contents_to_filename("{0}/{1}".format(local, remote.name.split('/')[-1:]))
+        return downloaded
 
     def make_folder(self, bucket, name):
         if not name.endswith("/"):
@@ -86,33 +84,27 @@ class S3Base(S3ToolsCommand):
 
         return self.bucket.get_key(name)
 
-    def multipart_upload(self, bucket, filesize, filename):
-        folder_path = self.get_file_folder(filename)
-        print("Using multi-part upload for {0}...".format(filename))
-        mp = bucket.initiate_multipart_upload(filename)
+    def multipart_upload(self, bucket, filesize, file_handle, path):
+        folder = self.make_folder(bucket, path)
+        s3_filename = os.path.basename(file_handle.name)
+        print("Using multi-part upload for {0}...".format(file_handle.name))
+        mp = bucket.initiate_multipart_upload(folder.name + s3_filename)
         chunk_count = int(math.ceil(filesize / float(self.part_size)))
 
         for i in range(chunk_count):
             offset = self.part_size * i
             bytes = min(self.part_size, filesize - offset)
-            with FileChunkIO(filename, 'r', offset=offset, bytes=bytes) as fp:
+            with FileChunkIO(file_handle.name, 'r', offset=offset, bytes=bytes) as fp:
                 mp.upload_part_from_file(fp, part_num=i + 1)
 
         print("Upload complete.")
         mp.complete_upload()
 
-    def get_file_folder(self, filename):
-        if not filename.endswith("/"):
-            parts = filename.split("/")
-            parts.pop()
-            return "/".join(parts) + "/"
-        return filename
-
-    def upload(self, bucket, filename):
-        folder_path = self.get_file_folder(filename)
-        self.make_folder(bucket, folder_path)
-        key = bucket.new_key(filename)
-        key.set_contents_from_filename(filename)
+    def upload(self, bucket, file_handle, path):
+        folder = self.make_folder(bucket, path)
+        s3_filename = os.path.basename(file_handle.name)
+        s3_file = bucket.new_key(folder.name + s3_filename)
+        return s3_file.set_contents_from_file(file_handle)
 
     @abstractmethod
     def execute(self):
@@ -123,7 +115,8 @@ class MySQLBase(S3Base):
     def __init__(self, args):
         super(MySQLBase, self).__init__(args)
         self.username = self.args.username
-        self.db_name = self.args.db_name
+        self.db_name = self.args.name
+
         self.version = self.args.version
         self.cleanup = self.args.cleanup
 
@@ -141,17 +134,17 @@ class MySQLBase(S3Base):
         return password
 
     def backup(self):
-        gzip = "{0}/{1}.sql.gz".format(self.version, self.db_name)
+        gzip = "{1}/{0}/{1}.sql.gz".format(self.version, self.db_name)
         cmd = "mysqldump -u {0} -p'{1}' {2} | gzip -9 > {3}".format(self.username, self.password, self.db_name, gzip)
         os.system(cmd)
 
         return gzip
 
     def restore(self):
-        cmd = "gunzip {0}/{1}.sql.gz".format(self.version, self.db_name)
+        cmd = "gunzip {1}.sql.gz".format(self.db_name)
         os.system(cmd)
 
-        extracted = "{0}/{1}.sql".format(self.version, self.db_name)
+        extracted = "{1}/{0}/{1}.sql".format(self.version, self.db_name)
         cmd = "mysql -u {0} -p'{1}' {2} <  {3}.sql".format(self.username, self.password, self.db_name, extracted)
         os.system(cmd)
 
