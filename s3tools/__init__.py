@@ -74,8 +74,9 @@ def parse_db_args(subparser, command):
         '-v',
         '--version',
         default=None,
-        help="The version of the DB you are backing up (%m%d%Y). During a restore, "
-             "if this is not specified, it will attempt to find the most recent backup."
+        help="The version of the DB you are backing up or restoring. "
+             "During a RESTORE, if this is not specified, it will attempt to find the most recent backup. "
+             "During a BACKUP, if this is not specified it will default to today's date in '%m%d%Y' format."
     )
 
 def parse_args(args=None):
