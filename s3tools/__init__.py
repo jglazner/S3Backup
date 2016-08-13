@@ -1,6 +1,6 @@
 __author__ = 'jglazner'
 
-import argparse, time
+import argparse
 
 from s3tools.backup import MySQLDatabaseBackup, S3BackupFileOrFolder
 from s3tools.restore import MySQLDatabaseRestore, S3RestoreFileOrFolder
@@ -36,8 +36,7 @@ def parse_s3_restore_args(subparser, command):
     s3.add_argument(
         'local',
         nargs='?',
-        default=None,
-        help="The local file or folder to backup/restore to/from the specified s3 bucket"
+        help="The local file or folder to backup or restore to or from the specified s3 bucket"
     )
     s3.add_argument(
         '-a',
@@ -74,11 +73,7 @@ def parse_db_args(subparser, command):
         '-v',
         '--version',
         default=None,
-        help="""
-The version of the DB you are backing up or restoring.
-During a RESTORE, if this is not specified, it will attempt to find the most recent backup.
-During a BACKUP, if this is not specified it will default to today's date in '%m%d%Y' format.
-"""
+        help="The version of the DB you are backing up or restoring. During a RESTORE, if this is not specified, it will attempt to find the most recent backup. During a BACKUP, if this is not specified it will default to today's date in '%m%d%Y' format."
     )
 
 def parse_args(args=None):
@@ -86,7 +81,7 @@ def parse_args(args=None):
     root_parser.add_argument(
         '--profile',
         default="default",
-        help="Which aws profile to use from ~/.aws/credentials. Default=default"
+        help="Which aws profile to use from .aws/credentials. Default=default"
     )
     root_parser.add_argument(
         '-b',
