@@ -7,6 +7,7 @@ import getpass
 import math
 from filechunkio import FileChunkIO
 from boto.exception import S3ResponseError
+from boto.provider import ProfileNotFoundError
 from abc import ABCMeta, abstractmethod
 
 
@@ -37,7 +38,10 @@ class S3ToolsCommand(object):
 class S3Base(S3ToolsCommand):
     def __init__(self, args):
         super(S3Base, self).__init__(args)
-        self.conn = boto.connect_s3(profile_name=args.profile)
+        try:
+            self.conn = boto.connect_s3(profile_name=args.profile)
+        except ProfileNotFoundError, e:
+            self.conn = boto.connect_s3()
         self.max_size = 20 * 1000 * 1000
         self.part_size = 6 * 1000 * 1000
 
