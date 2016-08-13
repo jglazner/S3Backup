@@ -25,8 +25,15 @@ def test_restore_folder_no_args():
     assert os.path.exists(DEEPEST_CHILD) is True
 
 def test_restore_db_version():
-    args = ['--profile', 'dennis', '-b', 'dennisestes-db-backups', 'restore', 'db', 'mtbseminars', '-u', 'mtbseminars', '-p', 'mtbseminars', '-v', '07222016']
+    args = ['--profile', 'dennis', '-b', 'dennisestes-unittests', 'restore', 'db', 'mtbseminars', '-u', 'mtbseminars', '-p', 'mtbseminars', '-v', '07222016']
     parsed_args = parse_args(args=args)
     obj = MySQLDatabaseRestore(parsed_args)
     obj.execute()
-    assert not obj.bucket.get_key('mtbseminars/{0}/mtbseminars.sql.gz'.format(parsed_args.version)) is None
+    assert os.path.exists("{0}/mtbseminars/07222016/mtbseminars.sql".format(os.getcwd()))
+
+def test_restore_latest_db_version():
+    args = ['--profile', 'dennis', '-b', 'dennisestes-unittests', 'restore', 'db', 'mtbseminars', '-u', 'mtbseminars', '-p', 'mtbseminars']
+    parsed_args = parse_args(args=args)
+    obj = MySQLDatabaseRestore(parsed_args)
+    obj.execute()
+    assert os.path.exists("{0}/mtbseminars/08132016/mtbseminars.sql".format(os.getcwd()))

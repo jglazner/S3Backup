@@ -43,7 +43,11 @@ class MySQLDatabaseRestore(MySQLBase):
         sorted = SortedList()
         for i in self.bucket.list(prefix=self.db_name):
             sorted.add(i.name)
-        return sorted[len(sorted)-1]
+        s3_path = sorted[len(sorted)-1]
+        parts = s3_path.split('/')
+        if not len(parts) == 3:
+            raise Exception("Could not extract the version from path {0} because it contained to many pieces")
+        return parts[1]
 
     def execute(self):
         self.logger.info("Downloading backup of DB: {0} ...".format(self.db_name))

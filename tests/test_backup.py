@@ -80,7 +80,7 @@ def test_backup_folder_with_path():
     assert not backup.bucket.get_key('test/path/subdir/childfile.txt') is None
 
 def test_backup_db():
-    args = ['--profile', 'dennis', '-b', 'dennisestes-db-backups', 'backup', 'db', 'mtbseminars', '-u', 'mtbseminars', '-p', 'mtbseminars']
+    args = ['--profile', 'dennis', '-b', 'dennisestes-unittests', 'backup', 'db', 'mtbseminars', '-u', 'mtbseminars', '-p', 'mtbseminars']
     parsed_args = parse_args(args=args)
     obj = MySQLDatabaseBackup(parsed_args)
     zipfile = obj.execute()
