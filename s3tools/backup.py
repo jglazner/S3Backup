@@ -41,10 +41,12 @@ class S3BackupFileOrFolder(S3Base):
         print('Uploading %s to Amazon S3 bucket %s' % (filename, self.bucket.name))
         filesize = os.stat(filename).st_size
         if filesize > self.max_size:
-            self.multipart_upload(self.bucket, filesize, filename, path)
+            with open(filename) as file_handle:
+                self.multipart_upload(self.bucket, filesize, file_handle, path)
         else:
             with open(filename) as f:
                 self.upload(self.bucket, f, path)
+
 
     def calculate_s3_path_for_file(self, filename):
         local_path = os.path.dirname(os.path.realpath(filename)) + "/"
