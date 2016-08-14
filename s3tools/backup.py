@@ -39,7 +39,7 @@ class S3BackupFileOrFolder(S3Base):
             path = self.remote
 
         print('Uploading %s to Amazon S3 bucket %s' % (filename, self.bucket.name))
-        filesize = os.stat(self.local).st_size
+        filesize = os.stat(filename).st_size
         if filesize > self.max_size:
             self.multipart_upload(self.bucket, filesize, filename, path)
         else:
