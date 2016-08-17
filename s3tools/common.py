@@ -15,9 +15,12 @@ class S3ToolsCommand(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, args):
+    def __init__(self, args, logger=None):
         self.args = args
-        self.logger = self.configure_logging()
+        if logger is None:
+            self.logger = self.configure_logging()
+        else:
+            self.logger = logger
 
     @abstractmethod
     def execute(self):
