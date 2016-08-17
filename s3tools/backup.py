@@ -6,13 +6,13 @@ from common import S3Base, MySQLBase
 
 
 class S3BackupFileOrFolder(S3Base):
-    def __init__(self, args):
+    def __init__(self, args, logger=None):
         """
         Creates the S3Backup object.
         :param base_name: The prefix to use for the bucket.
         :return:
         """
-        super(S3BackupFileOrFolder, self).__init__(args)
+        super(S3BackupFileOrFolder, self).__init__(args, logger=logger)
         self.bucket = self.get_or_create_bucket("{0}".format(self.args.bucket))
         self.use_absolute_paths = args.absolute_paths
         self.local = args.local
@@ -80,8 +80,8 @@ class S3BackupFileOrFolder(S3Base):
 
 
 class MySQLDatabaseBackup(MySQLBase):
-    def __init__(self, args):
-        super(MySQLDatabaseBackup, self).__init__(args)
+    def __init__(self, args, logger=None):
+        super(MySQLDatabaseBackup, self).__init__(args, logger=logger)
 
         self.bucket = self.get_or_create_bucket(self.args.bucket)
         if not self.bucket:

@@ -39,8 +39,8 @@ class S3ToolsCommand(object):
 
 
 class S3Base(S3ToolsCommand):
-    def __init__(self, args):
-        super(S3Base, self).__init__(args)
+    def __init__(self, args, logger=None):
+        super(S3Base, self).__init__(args, logger=logger)
         try:
             self.conn = boto.connect_s3(profile_name=args.profile)
         except ProfileNotFoundError, e:
@@ -123,8 +123,8 @@ class S3Base(S3ToolsCommand):
 
 
 class MySQLBase(S3Base):
-    def __init__(self, args):
-        super(MySQLBase, self).__init__(args)
+    def __init__(self, args, logger=None):
+        super(MySQLBase, self).__init__(args, logger=logger)
         self.username = self.args.username
         self.db_name = self.args.name
 

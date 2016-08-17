@@ -6,8 +6,8 @@ from sortedcontainers import SortedList
 
 
 class S3RestoreFileOrFolder(S3Base):
-    def __init__(self, args):
-        super(S3RestoreFileOrFolder, self).__init__(args)
+    def __init__(self, args, logger=None):
+        super(S3RestoreFileOrFolder, self).__init__(args, logger=logger)
         self.use_absolute_paths = args.absolute_paths
         self.local = args.local
         self.remote = args.remote
@@ -30,8 +30,8 @@ class S3RestoreFileOrFolder(S3Base):
 
 
 class MySQLDatabaseRestore(MySQLBase):
-    def __init__(self, args):
-        super(MySQLDatabaseRestore, self).__init__(args)
+    def __init__(self, args, logger=None):
+        super(MySQLDatabaseRestore, self).__init__(args, logger=logger)
         self.bucket = self.get_bucket(self.args.bucket)
         if not self.bucket:
             raise RuntimeError("S3 Bucket {0} does not exit!".format(self.args.bucket))
