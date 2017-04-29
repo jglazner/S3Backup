@@ -1,6 +1,7 @@
 __author__ = 'jglazner'
 
 import os
+import datetime
 from common import S3Base, MySQLBase
 from sortedcontainers import SortedList
 
@@ -42,12 +43,11 @@ class MySQLDatabaseRestore(MySQLBase):
     def find_latest(self):
         sorted = SortedList()
         for i in self.bucket.list(prefix=self.db_name):
-            sorted.add(i.name)
-        s3_path = sorted[len(sorted)-1]
-        parts = s3_path.split('/')
-        if not len(parts) == 3:
-            raise Exception("Could not extract the version from path {0} because it contained to many pieces")
-        return parts[1]
+            parts = i.name.split('/')
+            if len(parts) == 3:
+                d = datetime.datetime.strptime(parts[1], "%m%d%Y").date()
+                sorted.add(d)
+        return sorted[len(sorted)-1].strftime('%m%d%Y')
 
     def execute(self):
         self.logger.info("Downloading backup of DB: {0} ...".format(self.db_name))
